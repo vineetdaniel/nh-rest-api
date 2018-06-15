@@ -23,32 +23,26 @@ func (a *App) Initialize(user, password, dbname string) {
 	a.DB, err = sql.Open("mysql", connectionString)
 	if err != nil {
 		log.Fatal(err)
+	} else {
+		log.Print("connected with DB")
+		log.Print(err)
 	}
 	a.Router = mux.NewRouter()
+	a.intitializeRoutes()
 }
 
 func (a *App) Run(addr string) {
+	log.Print("server")
 	log.Fatal(http.ListenAndServe(addr, a.Router))
-}
 
+}
 func (a *App) intitializeRoutes() {
-	a.Router.HandleFunc("/citys", a.getCitys).Methods("GET")
+	a.Router.HandleFunc("/city", a.getCitys).Methods("GET")
 	a.Router.HandleFunc("/city/{id:[0-9]+}", a.getCity).Methods("GET")
 }
 
-func respondWithError(w http.ResponseWriter, code int, message string) {
-	responsdWithJson(w, code, map[string]string{"error": message})
-}
-
-func responsdWithJson(w http.ResponseWriter, code int, payload interface{}) {
-	response, _ := json.Marshal(payload)
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(code)
-	w.Write(response)
-}
-
 func (a *App) getCity(w http.ResponseWriter, r *http.Request) {
+	log.Printf("in city")
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -72,6 +66,7 @@ func (a *App) getCity(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) getCitys(w http.ResponseWriter, r *http.Request) {
+	log.Printf("in getCitys")
 	count, _ := strconv.Atoi(r.FormValue("count"))
 	start, _ := strconv.Atoi(r.FormValue("start"))
 
@@ -87,4 +82,16 @@ func (a *App) getCitys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	responsdWithJson(w, http.StatusOK, citys)
+}
+
+func respondWithError(w http.ResponseWriter, code int, message string) {
+	responsdWithJson(w, code, map[string]string{"error": message})
+}
+
+func responsdWithJson(w http.ResponseWriter, code int, payload interface{}) {
+	response, _ := json.Marshal(payload)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	w.Write(response)
 }
