@@ -20,6 +20,8 @@ type App struct {
 	DB     *sql.DB
 }
 
+const STATIC_DIR = "/Users/vineetdaniel/Development/django_docker/nexthalt/nexthalt/media/"
+
 func (a *App) Initialize(user, password, dbname string) {
 	connectionString := fmt.Sprintf("%s:%s@/%s", user, password, dbname)
 	log.Print(connectionString)
@@ -60,16 +62,15 @@ func httpLogger(fn func(w http.ResponseWriter, r *http.Request)) func(w http.Res
 func (a *App) intitializeRoutes() {
 	a.Router = mux.NewRouter()
 	log.Print("initializign routes")
-	s := http.StripPrefix("/img/", http.FileServer(http.Dir("./img/")))
-
-	a.Router.PathPrefix("/img/").Handler(s)
+	s := http.StripPrefix("/", http.FileServer(http.Dir(STATIC_DIR)))
+	a.Router.PathPrefix("/").Handler(s)
 	a.Router.HandleFunc("/health/", httpLogger(HealthCheckHandler))
 	a.Router.HandleFunc("/cities/", httpLogger(a.getCitiesHandler))
 	a.Router.HandleFunc("/city/{id:[0-9]+}/", a.getCityHandler).Methods("GET")
 	a.Router.HandleFunc("/locations/", httpLogger(a.getLocationsHandler))
 	a.Router.HandleFunc("/location/{id:[0-9]+}/", httpLogger(a.getLocationHandler))
 	a.Router.Use(loggingMiddleware)
-	http.Handle("/", a.Router)
+	//http.Handle("/", a.Router)
 	log.Print(a.Router)
 }
 
